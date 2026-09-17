@@ -1,0 +1,47 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "seed": "tsx src/seed.ts",
+    "migrate:legacy-users": "tsx src/migrateLegacyUsers.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.2.0",
+    "@types/node": "^26.1.2",
+    "@types/nodemailer": "^8.0.1",
+    "nodemon": "^3.1.14",
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bullmq": "^6.3.6",
+    "cloudinary": "^2.10.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "ioredis": "^6.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.8.1",
+    "multer": "^2.2.0",
+    "nodemailer": "^10.0.8"
+  }
+}
