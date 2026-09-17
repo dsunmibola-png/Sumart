@@ -5,7 +5,7 @@ import app from "./app";
 import { connectDB } from "./config/db";
 import { redisConnection } from "./config/redis";
 
-import "../src/workers/emailWorker";
+import "./workers/emailWorker";
 
 dns.setServers([
   "8.8.8.8",
