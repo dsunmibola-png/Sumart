@@ -17,6 +17,23 @@ const app = express();
 
 /*
 |--------------------------------------------------------------------------
+| Trust proxy
+|--------------------------------------------------------------------------
+|
+| SUMART is deployed behind Render's reverse proxy.
+|
+| Trust the first proxy hop so Express can correctly determine the
+| original client's IP address from X-Forwarded-For.
+|
+| This is also required by express-rate-limit when running behind
+| Render's proxy.
+|
+*/
+
+app.set("trust proxy", 1);
+
+/*
+|--------------------------------------------------------------------------
 | Security headers
 |--------------------------------------------------------------------------
 */
