@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns/promises";
 
 export interface SendEmailOptions {
   to: string;
@@ -23,46 +24,50 @@ if (
 
 /*
 |--------------------------------------------------------------------------
-| Reusable SMTP transporter
+| Resolve Gmail SMTP using IPv4
 |--------------------------------------------------------------------------
 |
-| Gmail SMTP using port 587 + STARTTLS.
-|
-| Port 465 is not reachable on the current network,
-| so we explicitly use Gmail's STARTTLS port instead.
+| Render attempted to connect to Gmail using IPv6 and returned
+| ENETUNREACH. We resolve smtp.gmail.com explicitly using IPv4
+| before creating the SMTP connection.
 |
 */
 
-const transporter =
-  nodemailer.createTransport({
-    host: "smtp.gmail.com",
+let gmailIPv4:
+  string | undefined;
 
-    port: 587,
+const getGmailIPv4 =
+  async () => {
+    if (gmailIPv4) {
+      return gmailIPv4;
+    }
 
-    /*
-     * false here means the connection
-     * starts normally and is upgraded
-     * using STARTTLS.
-     */
-    secure: false,
+    const result =
+      await dns.lookup(
+        "smtp.gmail.com",
+        {
+          family: 4,
+        }
+      );
 
-    auth: {
-      user: emailUser,
-      pass: emailPassword,
-    },
+    gmailIPv4 =
+      result.address;
 
-    pool: true,
+    return gmailIPv4;
+  };
 
-    maxConnections: 5,
-
-    maxMessages: 100,
-
-    /*
-     * Require TLS instead of allowing
-     * the connection to continue without it.
-     */
-    requireTLS: true,
-  });
+/*
+|--------------------------------------------------------------------------
+| Send email
+|--------------------------------------------------------------------------
+|
+| Gmail SMTP uses port 587 + STARTTLS.
+|
+| A transporter is created using Gmail's resolved IPv4 address.
+| The TLS servername remains smtp.gmail.com so Gmail's TLS
+| certificate is validated against the correct hostname.
+|
+*/
 
 export const sendEmail =
   async ({
@@ -83,6 +88,45 @@ export const sendEmail =
       process.env.EMAIL_FROM ||
       emailUser;
 
+    const smtpIPv4 =
+      await getGmailIPv4();
+
+    const transporter =
+      nodemailer.createTransport({
+        host: smtpIPv4,
+
+        port: 587,
+
+        secure: false,
+
+        auth: {
+          user: emailUser,
+          pass: emailPassword,
+        },
+
+        requireTLS: true,
+
+        /*
+         * We connect to Gmail through
+         * its IPv4 address, but TLS
+         * must still validate Gmail's
+         * actual hostname.
+         */
+        tls: {
+          servername:
+            "smtp.gmail.com",
+        },
+
+        connectionTimeout:
+          30_000,
+
+        greetingTimeout:
+          30_000,
+
+        socketTimeout:
+          60_000,
+      });
+
     const info =
       await transporter.sendMail({
         from: `"SUMART" <${from}>`,
@@ -90,6 +134,8 @@ export const sendEmail =
         subject,
         html,
       });
+
+    transporter.close();
 
     return info;
   };
